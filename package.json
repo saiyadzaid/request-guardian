@@ -6,6 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/saiyadzaid/request-guardian.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
