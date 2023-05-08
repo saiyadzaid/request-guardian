@@ -1,0 +1,15 @@
+{
+  "name": "request-guardian",
+  "version": "1.0.9",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express-validator": "^7.0.1"
+  }
+}
