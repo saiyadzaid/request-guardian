@@ -24,14 +24,10 @@ const validate = require('request-guardian');
 
 const app = express();
 
-// use request-guardian middleware
-app.use(validate);
+// Use Request Guardian middleware
+validate(app);
 
 // define your routes
-app.get('/', (req, res) => {
-    // handle request
-});
-
 app.post('/users', (req, res) => {
     // handle validated request
 });
@@ -50,33 +46,6 @@ module.exports = {
         body('password').isLength({ min: 8 }),
     ]
 } ;
-```
-
-
-
-```javascript
-// app.js
-
-const express = require('express');
-const validate = require('request-guardian');
-
-const app = express();
-
-// use request-guardian middleware
-app.use(validate);
-
-// define your routes
-app.get('/', (req, res) => {
-    // handle request
-});
-
-app.post('/users', (req, res) => {
-    // handle validated request
-});
-
-app.listen(3000, () => {
-    console.log('Server started on port 3000');
-});
 ```
 
 If no validation rules are found for the current route, `request-guardian` will simply pass the request to the next middleware function in the stack.
