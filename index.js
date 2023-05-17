@@ -13,13 +13,21 @@ function runValidator(validations) {
             if (errors.isEmpty()) {
                 return next();
             }
-            res.status(422).json({ data: errors.array() });
+            res.status(422).json({
+                data: errors.array(),
+                status: 'VALIDATION_ERROR',
+                message: 'Invalid Data, Validation Failed.',
+            });
         } catch (error) {
             let message = error.message;
             if (error.code === 'MODULE_NOT_FOUND') {
                 message = `Validations rules not found for ${req.path}`;
             }
-            res.status(400).json({ data: message });
+            res.status(400).json({
+                data: message,
+                status: 'BAD_REQUEST',
+                message: message,
+            });
         }
     };
 }
