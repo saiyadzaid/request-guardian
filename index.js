@@ -24,8 +24,14 @@ function runValidator(validations) {
     };
 }
 function validate(app) {
-    for (const key in require(path.resolve('utils/validations/index')) ) {
-        app.use(key, runValidator(require(path.resolve('utils/validations/index'))[key]));
+    try {
+        for (const key in require(path.resolve('utils/validations/index'))) {
+            app.use(key, runValidator(require(path.resolve('utils/validations/index'))[key]));
+        }
+    } catch (error) {
+        if (error.code === 'MODULE_NOT_FOUND') {
+            console.log(`Validations rules not found at utils/validations/index.js`)
+        }
     }
 }
 module.exports = validate;
