@@ -10,7 +10,7 @@
     "type": "git",
     "url": "https://github.com/saiyadzaid/request-guardian.git"
   },
-  "keywords": [],
+  "keywords": ["express","validator", "validation", "validate", "sanitize", "sanitization", "xss"],
   "author": "",
   "license": "ISC",
   "dependencies": {
