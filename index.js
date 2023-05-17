@@ -13,13 +13,13 @@ function runValidator(validations) {
             if (errors.isEmpty()) {
                 return next();
             }
-            res.status(400).json({ errors: errors.array() });
+            res.status(422).json({ data: errors.array() });
         } catch (error) {
             let message = error.message;
             if (error.code === 'MODULE_NOT_FOUND') {
                 message = `Validations rules not found for ${req.path}`;
             }
-            res.status(400).json({ errors: message });
+            res.status(400).json({ data: message });
         }
     };
 }
