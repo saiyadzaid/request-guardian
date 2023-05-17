@@ -49,7 +49,3 @@ module.exports = {
 ```
 
 If no validation rules are found for the current route, `request-guardian` will simply pass the request to the next middleware function in the stack.
-
-## Keywords
-
-express validator validation validate sanitize sanitization xss
