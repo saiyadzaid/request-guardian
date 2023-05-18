@@ -18,11 +18,16 @@ yarn add request-guardian
 
 `request-guardian` is a middleware function that can be used with `Express` applications. To use it, simply require the module and use it as middleware for your routes.
 
+NOTE: Make sure that you call the validate() method after a middleware to parse incoming requests with JSON payloads.
+
 ```javascript
 const express = require('express');
 const validate = require('request-guardian');
 
 const app = express();
+
+// middleware to parse incoming requests with JSON payloads.
+app.use(express.json());
 
 // Use Request Guardian middleware
 validate(app);
