@@ -1,10 +1,8 @@
-# Readme for Request-Guardian
+# Request Guardian
 
-`request-guardian` is a middleware function that validates incoming requests against a set of validation rules using `express-validator`. It can be used to ensure that data sent to a server is in the expected format and meets certain criteria. If the validation fails, it returns a 422 error response with an array of validation errors.
+`request-guardian` registers [express-validator](https://express-validator.github.io/) rules on an Express app. Rules come from your project's `utils/validations/index.js`. Failed validation returns **422**. Unexpected errors while running validators return **400**.
 
 ## Installation
-
-To install `request-guardian`, use `npm` or `yarn`.
 
 ```bash
 npm install request-guardian
@@ -14,11 +12,11 @@ npm install request-guardian
 yarn add request-guardian
 ```
 
+This package depends on `express-validator`. Use it with Express.
+
 ## Usage
 
-`request-guardian` is a middleware function that can be used with `Express` applications. To use it, simply require the module and use it as middleware for your routes.
-
-NOTE: Make sure that you call the validate() method after a middleware to parse incoming requests with JSON payloads.
+Call `validate(app)` **after** body parsers such as `express.json()`, and **before** you define route handlers. `validate` attaches middleware when it runs, so calling it after `app.post(...)` can skip validation.
 
 ```javascript
 const express = require('express');
@@ -26,25 +24,29 @@ const validate = require('request-guardian');
 
 const app = express();
 
-// middleware to parse incoming requests with JSON payloads.
 app.use(express.json());
-
-// Use Request Guardian middleware
 validate(app);
 
-// define your routes
 app.post('/users', (req, res) => {
-    // handle validated request
+    // request already passed validation for this path
 });
 ```
 
-Validation rules are defined in `utils/validations/index.js`. Each route can either use a single array of validation chains for all methods, or a method-specific object when the same path should validate differently by HTTP method.
+Put validation rules in `utils/validations/index.js` at the **application root** (the process working directory), not inside `node_modules`. Keys must match the Express paths you register.
 
-This is useful when the same route name is reused for different methods such as `GET` and `POST` but each method needs different validation logic.
+Each path can be:
+
+- An **array** of validation chains: applied to every method (`app.use`).
+- An **object** keyed by HTTP method: different rules for `GET`, `POST`, and other methods on the same path.
+
+Supported method keys (case-insensitive): `all`, `get`, `post`, `put`, `delete`, `patch`, `options`, `head`. Unknown keys are ignored.
+
+### Method-specific rules
+
+Use this when the same path needs different rules per method:
 
 ```javascript
 // utils/validations/index.js
-
 const { body, query } = require('express-validator');
 
 module.exports = {
@@ -60,9 +62,23 @@ module.exports = {
 };
 ```
 
-You can also use a single validation array for all methods on a route:
+`all` applies to every method on that path, the same as a bare array:
 
 ```javascript
+module.exports = {
+    '/api/reports': {
+        all: [
+            query('from').optional().isISO8601(),
+        ],
+    },
+};
+```
+
+### Same rules for every method
+
+```javascript
+const { body } = require('express-validator');
+
 module.exports = {
     '/api/users': [
         body('name').notEmpty(),
@@ -70,4 +86,30 @@ module.exports = {
 };
 ```
 
-If no validation rules are found for the current route, `request-guardian` will simply pass the request to the next middleware function in the stack.
+If a path is not listed, no validation middleware is attached for it. If `utils/validations/index.js` is missing, `validate()` logs `Validations rules not found at utils/validations/index.js` and registers nothing.
+
+## Responses
+
+Validation failure:
+
+```json
+{
+    "data": [],
+    "status": "VALIDATION_ERROR",
+    "message": "Invalid Data, Validation Failed."
+}
+```
+
+`data` is `express-validator`'s `errors.array()`.
+
+Unexpected error while running validators:
+
+```json
+{
+    "data": "error message",
+    "status": "BAD_REQUEST",
+    "message": "error message"
+}
+```
+
+HTTP status codes: **422** for validation errors, **400** for other failures in the validator.
