@@ -1,6 +1,6 @@
 # Readme for Request-Guardian
 
-`request-guardian` is a middleware function that validates incoming requests against a set of validation rules using `express-validator`. It can be used to ensure that data sent to a server is in the expected format and meets certain criteria. If the validation fails, it returns a 400 error response with an array of validation errors.
+`request-guardian` is a middleware function that validates incoming requests against a set of validation rules using `express-validator`. It can be used to ensure that data sent to a server is in the expected format and meets certain criteria. If the validation fails, it returns a 422 error response with an array of validation errors.
 
 ## Installation
 
@@ -38,19 +38,36 @@ app.post('/users', (req, res) => {
 });
 ```
 
-Validation rules are defined in separate files located in the `utils/validations/index.js` directory. `request-guardian` will look for a file with the same name as the current route and load any validation rules defined within that file.
+Validation rules are defined in `utils/validations/index.js`. Each route can either use a single array of validation chains for all methods, or a method-specific object when the same path should validate differently by HTTP method.
+
+This is useful when the same route name is reused for different methods such as `GET` and `POST` but each method needs different validation logic.
 
 ```javascript
 // utils/validations/index.js
 
-const { body } = require('express-validator');
+const { body, query } = require('express-validator');
 
 module.exports = {
-    '/api/authentication/signup': [
-        body('email').isEmail(),
-        body('password').isLength({ min: 8 }),
-    ]
-} ;
+    '/api/authentication/signup': {
+        GET: [
+            query('page').optional().isInt({ min: 1 }),
+        ],
+        POST: [
+            body('email').isEmail(),
+            body('password').isLength({ min: 8 }),
+        ],
+    },
+};
+```
+
+You can also use a single validation array for all methods on a route:
+
+```javascript
+module.exports = {
+    '/api/users': [
+        body('name').notEmpty(),
+    ],
+};
 ```
 
 If no validation rules are found for the current route, `request-guardian` will simply pass the request to the next middleware function in the stack.

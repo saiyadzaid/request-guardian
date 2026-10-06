@@ -1,6 +1,17 @@
 const { validationResult } = require('express-validator');
 const path = require('path');
 
+const VALID_HTTP_METHODS = new Set([
+    'all',
+    'get',
+    'post',
+    'put',
+    'delete',
+    'patch',
+    'options',
+    'head',
+]);
+
 function runValidator(validations) {
     return async function _runValidator(req, res, next) {
         try {
@@ -31,15 +42,49 @@ function runValidator(validations) {
         }
     };
 }
-function validate(app) {
-    try {
-        for (const key in require(path.resolve('utils/validations/index'))) {
-            app.use(key, runValidator(require(path.resolve('utils/validations/index'))[key]));
+
+function registerRouteValidation(app, routeName, validationConfig) {
+    if (!validationConfig) return;
+
+    if (Array.isArray(validationConfig)) {
+        app.use(routeName, runValidator(validationConfig));
+        return;
+    }
+
+    if (typeof validationConfig !== 'object') {
+        return;
+    }
+
+    for (const [method, rules] of Object.entries(validationConfig)) {
+        const normalizedMethod = method.toLowerCase();
+
+        if (!VALID_HTTP_METHODS.has(normalizedMethod)) {
+            continue;
         }
-    } catch (error) {
-        if (error.code === 'MODULE_NOT_FOUND') {
-            console.log(`Validations rules not found at utils/validations/index.js`)
+
+        if (Array.isArray(rules)) {
+            if (normalizedMethod === 'all') {
+                app.use(routeName, runValidator(rules));
+                continue;
+            }
+
+            app[normalizedMethod](routeName, runValidator(rules));
         }
     }
 }
+
+function validate(app) {
+    try {
+        const validationRules = require(path.resolve('utils/validations/index'));
+
+        for (const [key, value] of Object.entries(validationRules || {})) {
+            registerRouteValidation(app, key, value);
+        }
+    } catch (error) {
+        if (error.code === 'MODULE_NOT_FOUND') {
+            console.log(`Validations rules not found at utils/validations/index.js`);
+        }
+    }
+}
+
 module.exports = validate;
